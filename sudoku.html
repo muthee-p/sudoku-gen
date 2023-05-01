@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<title>Sudoku generator</title>
+  <link rel="stylesheet" href="style.css">
+  </head>
+
+  <body>
+    <h1>Sudoku Generator</h1>
+<div class='content'>
+    <p>Number of puzzles generated: <span id="count">0</span></p>
+
+    <table id="sudoku-grid"></table>
+    <button onclick="generateAndDisplay()">Generate new puzzle</button>
+	 
+</div>
+	<script>
+		let count = 0;
+
+		 function generateAndDisplay() {
+		 	count++;
+        const grid = generateSudoku();
+        const table = document.getElementById("sudoku-grid");
+        table.innerHTML = ""; // clear previous contents
+        for (let i = 0; i < 9; i++) {
+          const row = document.createElement("tr");
+          for (let j = 0; j < 9; j++) {
+            const cell = document.createElement("td");
+            if (grid[i][j] != 0) {
+              cell.textContent = grid[i][j];
+            }
+            row.appendChild(cell);
+          }
+          table.appendChild(row);
+        }
+        document.getElementById("count").textContent = count;
+      }
+	function generateSudoku() {
+  // initialize empty 9x9 grid
+  const grid = Array.from({ length: 9 }, () => Array.from({ length: 9 }, () => 0));
+  
+  // fill the diagonal 3x3 squares with random valid values
+  for (let i = 0; i < 9; i += 3) {
+    const values = shuffle([1, 2, 3, 4, 5, 6, 7, 8, 9]);
+    for (let j = 0; j < 3; j++) {
+      for (let k = 0; k < 3; k++) {
+        grid[i + j][i + k] = values[j * 3 + k];
+      }
+    }
+  }
+  
+  // recursively fill the rest of the grid using backtracking
+  fillGrid(grid, 0, 3);
+  
+  return grid;
+}
+
+function fillGrid(grid, row, col) {
+  if (row == 9) {
+    // grid is complete
+    return true;
+  }
+  
+  if (col == 9) {
+    // move to next row
+    return fillGrid(grid, row + 1, 0);
+  }
+  
+  if (grid[row][col] != 0) {
+    // cell already has a value, skip it
+    return fillGrid(grid, row, col + 1);
+  }
+  
+  // try all possible values for current cell
+  for (let value of shuffle([1, 2, 3, 4, 5, 6, 7, 8, 9])) {
+    if (isValid(grid, row, col, value)) {
+      // value is valid, assign it to cell
+      grid[row][col] = value;
+      if (fillGrid(grid, row, col + 1)) {
+        // grid is complete, backtrack
+        return true;
+      }
+    }
+  }
+  
+  // no valid value found, backtrack
+  grid[row][col] = 0;
+  return false;
+}
+
+function isValid(grid, row, col, value) {
+  // check if value already appears in row or column
+  for (let i = 0; i < 9; i++) {
+    if (grid[row][i] == value || grid[i][col] == value) {
+      return false;
+    }
+  }
+  
+  // check if value already appears in 3x3 square
+  const rowStart = Math.floor(row / 3) * 3;
+  const colStart = Math.floor(col / 3) * 3;
+  for (let i = rowStart; i < rowStart + 3; i++) {
+    for (let j = colStart; j < colStart + 3; j++) {
+      if (grid[i][j] == value) {
+        return false;
+      }
+    }
+  }
+  
+  return true;
+}
+
+function shuffle(array) {
+  // Fisher-Yates shuffle algorithm
+  for (let i = array.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [array[i], array[j]] = [array[j], array[i]];
+  }
+  return array;
+}
+let puzzle = generateSudoku();
+console.log(puzzle);
+	</script>
+
+</body>
+</html>
